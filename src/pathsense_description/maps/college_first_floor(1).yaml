@@ -1,0 +1,8 @@
+# Ground-truth map incl. furniture (z 0.03-1.5 m slice) - use as Nav2 static map
+image: college_first_floor.pgm
+mode: trinary
+resolution: 0.05
+origin: [-10.0, -32.0, 0.0]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.25

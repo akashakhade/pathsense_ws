@@ -1,0 +1,57 @@
+# Room door coordinates in the college_first_floor world (metres, map/odom frame at robot start).
+# approach = 1 m outside the door (corridor side), inside = 1 m inside the room.
+start: {x: 0.0, y: 0.0, yaw: 0.0}   # entrance lobby, facing east
+rooms:
+  "130": {type: room, centre: [15.65, 21.35], door: [13.63, 17.2], approach: [13.63, 16.2], inside: [13.63, 18.2]}
+  "129": {type: room, centre: [22.55, 19.25], door: [22.55, 17.2], approach: [22.55, 16.2], inside: [22.55, 18.2]}
+  "128": {type: room, centre: [26.95, 20.3], door: [28.225, 17.2], approach: [28.225, 16.2], inside: [28.225, 18.2]}
+  "127": {type: rest, centre: [30.25, 20.3], door: [30.25, 17.2], approach: [30.25, 16.2], inside: [30.25, 18.2]}
+  "126": {type: rest, centre: [32.1, 21.1], door: [32.1, 17.2], approach: [32.1, 16.2], inside: [32.1, 18.2]}
+  "125": {type: room, centre: [35.65, 21.25], door: [34.425, 17.1], approach: [34.425, 16.1], inside: [34.425, 18.1]}
+  "124": {type: room, centre: [40.55, 21.25], door: [42.02, 17.1], approach: [42.02, 16.1], inside: [42.02, 18.1]}
+  "Stair 05": {type: stair, centre: [44.95, 20.25], door: [44.95, 17.1], approach: [44.95, 16.1], inside: [44.95, 18.1]}
+  "123": {type: room, centre: [49.3, 20.25], door: [50.74, 17.1], approach: [50.74, 16.1], inside: [50.74, 18.1]}
+  "122": {type: room, centre: [53.45, 19.2], door: [53.1, 17.1], approach: [53.1, 16.1], inside: [53.1, 18.1]}
+  "121": {type: room, centre: [57.7, 21.25], door: [56.45, 17.1], approach: [56.45, 16.1], inside: [56.45, 18.1]}
+  "120": {type: room, centre: [62.6, 21.25], door: [61.4, 17.1], approach: [61.4, 16.1], inside: [61.4, 18.1]}
+  "Admin Office": {type: room, centre: [-0.9, 10.8], door: [1.05, 3.8], approach: [1.05, 2.8], inside: [1.05, 4.8]}
+  "Admin Annex": {type: room, centre: [5.75, 9.0], door: [5.75, 3.8], approach: [5.75, 2.8], inside: [5.75, 4.8]}
+  "138": {type: room, centre: [12.1, 11.0], door: [15.7, 10.3], approach: [16.7, 10.3], inside: [14.7, 10.3]}
+  "139": {type: room, centre: [13.1, 4.35], door: [15.7, 4.35], approach: [16.7, 4.35], inside: [14.7, 4.35]}
+  "Board Room": {type: room, centre: [-2.0, -6.95], door: [-1.44, -3.3], approach: [-1.44, -2.3], inside: [-1.44, -4.3]}
+  "Principal Cabin": {type: room, centre: [3.65, -6.95], door: [3.08, -3.3], approach: [3.08, -2.3], inside: [3.08, -4.3]}
+  "Stair 01": {type: stair, centre: [12.4, -7.0], door: [12.4, -3.5], approach: [12.4, -2.5], inside: [12.4, -4.5]}
+  "Stair 06": {type: stair, centre: [20.6, 12.7], door: [18.1, 12.7], approach: [17.1, 12.7], inside: [19.1, 12.7]}
+  "131": {type: rest, centre: [19.8, 10.05], door: [18.1, 10.05], approach: [17.1, 10.05], inside: [19.1, 10.05]}
+  "132": {type: rest, centre: [19.8, 7.95], door: [18.1, 7.95], approach: [17.1, 7.95], inside: [19.1, 7.95]}
+  "133": {type: room, centre: [19.8, 5.5], door: [18.1, 5.5], approach: [17.1, 5.5], inside: [19.1, 5.5]}
+  "134": {type: room, centre: [20.35, 2.35], door: [18.1, 2.35], approach: [17.1, 2.35], inside: [19.1, 2.35]}
+  "135": {type: room, centre: [20.35, -1.35], door: [18.1, -1.35], approach: [17.1, -1.35], inside: [19.1, -1.35]}
+  "136": {type: room, centre: [20.35, -4.8], door: [18.1, -4.8], approach: [17.1, -4.8], inside: [19.1, -4.8]}
+  "137": {type: room, centre: [20.35, -8.3], door: [18.1, -8.3], approach: [17.1, -8.3], inside: [19.1, -8.3]}
+  "116": {type: room, centre: [51.25, 11.75], door: [55.1, 10.65], approach: [56.1, 10.65], inside: [54.1, 10.65]}
+  "115": {type: room, centre: [51.25, 6.3], door: [55.1, 5.22], approach: [56.1, 5.22], inside: [54.1, 5.22]}
+  "114": {type: room, centre: [51.25, -1.6], door: [55.1, -1.08], approach: [56.1, -1.08], inside: [54.1, -1.08]}
+  "113": {type: room, centre: [51.25, -7.05], door: [55.1, -7.05], approach: [56.1, -7.05], inside: [54.1, -7.05]}
+  "Stair 04": {type: stair, centre: [63.2, 11.8], door: [60.5, 11.8], approach: [59.5, 11.8], inside: [61.5, 11.8]}
+  "119": {type: rest, centre: [68.15, 12.5], door: [68.15, 14.5], approach: [68.15, 15.5], inside: [68.15, 13.5]}
+  "118": {type: room, centre: [61.7, 6.3], door: [57.5, 6.3], approach: [56.5, 6.3], inside: [58.5, 6.3]}
+  "117": {type: room, centre: [61.7, -1.5], door: [57.5, -1.0], approach: [56.5, -1.0], inside: [58.5, -1.0]}
+  "Stair 03": {type: stair, centre: [63.95, -7.4], door: [63.95, -9.7], approach: [63.95, -10.7], inside: [63.95, -8.7]}
+  "112": {type: rest, centre: [68.6, -7.4], door: [68.6, -9.7], approach: [68.6, -10.7], inside: [68.6, -8.7]}
+  "101": {type: room, centre: [12.75, -23.45], door: [11.69, -21.5], approach: [11.69, -20.5], inside: [11.69, -22.5]}
+  "102": {type: room, centre: [17.75, -23.45], door: [16.81, -21.5], approach: [16.81, -20.5], inside: [16.81, -22.5]}
+  "103": {type: room, centre: [22.55, -15.05], door: [22.55, -12.9], approach: [22.55, -11.9], inside: [22.55, -13.9]}
+  "104": {type: room, centre: [27.2, -16.5], door: [28.28, -12.9], approach: [28.28, -11.9], inside: [28.28, -13.9]}
+  "105": {type: rest, centre: [30.75, -17.25], door: [30.75, -14.5], approach: [30.75, -13.5], inside: [30.75, -15.5]}
+  "106": {type: rest, centre: [32.5, -17.25], door: [32.5, -14.5], approach: [32.5, -13.5], inside: [32.5, -15.5]}
+  "107": {type: room, centre: [38.5, -14.05], door: [38.5, -12.6], approach: [38.5, -11.6], inside: [38.5, -13.6]}
+  "107A": {type: room, centre: [35.6, -18.25], door: [37.8, -18.25], approach: [38.8, -18.25], inside: [36.8, -18.25]}
+  "107E": {type: room, centre: [41.4, -18.25], door: [39.2, -18.25], approach: [38.2, -18.25], inside: [40.2, -18.25]}
+  "107B": {type: room, centre: [35.6, -23.75], door: [37.8, -23.75], approach: [38.8, -23.75], inside: [36.8, -23.75]}
+  "107D": {type: room, centre: [41.4, -23.75], door: [39.2, -23.75], approach: [38.2, -23.75], inside: [40.2, -23.75]}
+  "Stair 02": {type: stair, centre: [45.55, -15.9], door: [45.55, -12.6], approach: [45.55, -11.6], inside: [45.55, -13.6]}
+  "108": {type: room, centre: [50.0, -15.9], door: [49.0, -12.6], approach: [49.0, -11.6], inside: [49.0, -13.6]}
+  "109": {type: room, centre: [54.3, -14.8], door: [54.3, -12.6], approach: [54.3, -11.6], inside: [54.3, -13.6]}
+  "110": {type: room, centre: [58.75, -21.65], door: [57.69, -17.0], approach: [57.69, -16.0], inside: [57.69, -18.0]}
+  "111": {type: room, centre: [63.9, -21.65], door: [62.9, -17.0], approach: [62.9, -16.0], inside: [62.9, -18.0]}

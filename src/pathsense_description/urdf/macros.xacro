@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<!-- Reusable geometry and inertia helpers -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ===================== inertia ===================== -->
+  <xacro:macro name="box_inertial" params="m x y z *origin">
+    <inertial>
+      <xacro:insert_block name="origin"/>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(y*y+z*z)/12}" ixy="0" ixz="0"
+               iyy="${m*(x*x+z*z)/12}" iyz="0"
+               izz="${m*(x*x+y*y)/12}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- cylinder whose axis is the link Y axis (wheels) -->
+  <xacro:macro name="wheel_inertial" params="m r h">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(3*r*r+h*h)/12}" ixy="0" ixz="0"
+               iyy="${m*r*r/2}" iyz="0"
+               izz="${m*(3*r*r+h*h)/12}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- ===================== track grip pads ===================== -->
+  <!-- n pads spaced evenly around a ring of radius r (axis = link Y) -->
+  <xacro:macro name="ring_pads" params="n i r w">
+    <xacro:if value="${i &lt; n}">
+      <visual>
+        <origin xyz="${r*cos(2*pi*i/n)} 0 ${r*sin(2*pi*i/n)}" rpy="0 ${pi/2 - 2*pi*i/n} 0"/>
+        <geometry><box size="${pad_len} ${w} ${pad_t}"/></geometry>
+        <material name="track_black"><color rgba="0.050 0.050 0.055 1.0"/></material>
+      </visual>
+      <xacro:ring_pads n="${n}" i="${i+1}" r="${r}" w="${w}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <!-- n pads along a straight belt run from (x0,z0) to (x1,z1), offset by (ox,oz), tilted by pitch -->
+  <xacro:macro name="line_pads" params="n i x0 z0 x1 z1 y w pitch">
+    <xacro:if value="${i &lt; n}">
+      <visual>
+        <origin xyz="${x0 + (x1-x0)*(i+0.5)/n} ${y} ${z0 + (z1-z0)*(i+0.5)/n}" rpy="0 ${pitch} 0"/>
+        <geometry><box size="${pad_len} ${w} ${pad_t}"/></geometry>
+        <material name="track_black"><color rgba="0.050 0.050 0.055 1.0"/></material>
+      </visual>
+      <xacro:line_pads n="${n}" i="${i+1}" x0="${x0}" z0="${z0}" x1="${x1}" z1="${z1}" y="${y}" w="${w}" pitch="${pitch}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <!-- n round holes on a wheel face (face plane y = yf), on pitch circle rc -->
+  <xacro:macro name="face_holes" params="n i rc rh yf">
+    <xacro:if value="${i &lt; n}">
+      <visual>
+        <origin xyz="${rc*cos(2*pi*i/n + pi/n)} ${yf} ${rc*sin(2*pi*i/n + pi/n)}" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${rh}" length="0.002"/></geometry>
+        <material name="hole_dark"><color rgba="0.200 0.210 0.235 1.0"/></material>
+      </visual>
+      <xacro:face_holes n="${n}" i="${i+1}" rc="${rc}" rh="${rh}" yf="${yf}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <!-- small rivets along a horizontal line on a body side -->
+  <xacro:macro name="rivet_row" params="n i x0 x1 y z">
+    <xacro:if value="${i &lt; n}">
+      <visual>
+        <origin xyz="${x0 + (x1-x0)*i/(n-1)} ${y} ${z}" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="0.0028" length="0.002"/></geometry>
+        <material name="plate_silver"><color rgba="0.760 0.780 0.800 1.0"/></material>
+      </visual>
+      <xacro:rivet_row n="${n}" i="${i+1}" x0="${x0}" x1="${x1}" y="${y}" z="${z}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <!-- a silver pulley face disc with dark holes and hub, placed on face y = yf -->
+  <xacro:macro name="pulley_face" params="r yf holes rc rh">
+    <visual>
+      <origin xyz="0 ${yf} 0" rpy="${pi/2} 0 0"/>
+      <geometry><cylinder radius="${r}" length="0.003"/></geometry>
+      <material name="wheel_silver"><color rgba="0.800 0.815 0.835 1.0"/></material>
+    </visual>
+    <xacro:face_holes n="${holes}" i="0" rc="${rc}" rh="${rh}" yf="${yf + 0.0012*copysign(1.0, yf)}"/>
+    <visual> <!-- hub -->
+      <origin xyz="0 ${yf + 0.002*copysign(1.0, yf)} 0" rpy="${pi/2} 0 0"/>
+      <geometry><cylinder radius="${r*0.22}" length="0.004"/></geometry>
+      <material name="hole_dark"><color rgba="0.200 0.210 0.235 1.0"/></material>
+    </visual>
+    <visual> <!-- shaft end -->
+      <origin xyz="0 ${yf + 0.004*copysign(1.0, yf)} 0" rpy="${pi/2} 0 0"/>
+      <geometry><cylinder radius="${r*0.08}" length="0.004"/></geometry>
+      <material name="wheel_silver"><color rgba="0.800 0.815 0.835 1.0"/></material>
+    </visual>
+  </xacro:macro>
+
+</robot>

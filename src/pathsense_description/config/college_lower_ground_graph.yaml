@@ -1,0 +1,70 @@
+# Topological route graph of the college lower ground floor (map frame, metres).
+# Robot starts at "lobby" (0, 0) facing +x. Room nodes are named by room number.
+# type: lobby | corridor | door | room
+nodes:
+  "lobby": {x: 0.00, y: 0.00, type: lobby}
+  "J1": {x: 9.30, y: 0.00, type: corridor}
+  "J2": {x: 9.30, y: 7.20, type: corridor}
+  "J3": {x: 9.60, y: -3.70, type: corridor}
+  "J4": {x: 8.40, y: -18.80, type: corridor}
+  "J5": {x: 8.90, y: -23.10, type: corridor}
+  "J6": {x: 47.70, y: -3.70, type: corridor}
+  "J7": {x: 47.70, y: -14.00, type: corridor}
+  "J8": {x: 51.80, y: -14.00, type: corridor}
+  "c_01": {x: 9.30, y: 3.92, type: corridor}
+  "d_01": {x: 8.50, y: 3.92, type: door}
+  "01": {x: 5.50, y: 3.92, type: room}
+  "c_02": {x: 9.16, y: -9.26, type: corridor}
+  "d_02": {x: 7.70, y: -9.14, type: door}
+  "02": {x: 4.70, y: -9.14, type: room}
+  "c_03": {x: 8.97, y: -11.64, type: corridor}
+  "d_03": {x: 7.20, y: -11.50, type: door}
+  "03": {x: 4.20, y: -11.50, type: room}
+  "c_04": {x: 8.90, y: -23.06, type: corridor}
+  "04": {x: 12.00, y: -23.05, type: room}
+  "c_05": {x: 17.72, y: -3.70, type: corridor}
+  "d_05": {x: 17.72, y: -2.90, type: door}
+  "05": {x: 17.72, y: 0.10, type: room}
+  "c_09": {x: 46.85, y: -3.70, type: corridor}
+  "d_09": {x: 46.85, y: -2.90, type: door}
+  "09": {x: 46.85, y: 0.10, type: room}
+  "c_06": {x: 21.18, y: -3.70, type: corridor}
+  "d_06": {x: 21.18, y: -4.60, type: door}
+  "06": {x: 21.18, y: -7.60, type: room}
+  "c_07": {x: 38.16, y: -3.70, type: corridor}
+  "d_07": {x: 38.16, y: -4.60, type: door}
+  "07": {x: 38.16, y: -7.60, type: room}
+  "10": {x: 55.00, y: -14.12, type: room}
+edges:
+  - ["01", "d_01"]
+  - ["02", "d_02"]
+  - ["03", "d_03"]
+  - ["04", "c_04"]
+  - ["05", "d_05"]
+  - ["06", "d_06"]
+  - ["07", "d_07"]
+  - ["09", "d_09"]
+  - ["10", "J8"]
+  - ["J1", "J3"]
+  - ["J1", "c_01"]
+  - ["J1", "lobby"]
+  - ["J2", "c_01"]
+  - ["J3", "c_02"]
+  - ["J3", "c_05"]
+  - ["J4", "c_03"]
+  - ["J4", "c_04"]
+  - ["J5", "c_04"]
+  - ["J6", "J7"]
+  - ["J6", "c_09"]
+  - ["J7", "J8"]
+  - ["c_01", "d_01"]
+  - ["c_02", "c_03"]
+  - ["c_02", "d_02"]
+  - ["c_03", "d_03"]
+  - ["c_05", "c_06"]
+  - ["c_05", "d_05"]
+  - ["c_06", "c_07"]
+  - ["c_06", "d_06"]
+  - ["c_07", "c_09"]
+  - ["c_07", "d_07"]
+  - ["c_09", "d_09"]

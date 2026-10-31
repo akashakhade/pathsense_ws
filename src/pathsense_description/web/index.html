@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#14171c">
+<title>PathSense Remote</title>
+<script src="roslib.min.js"></script>
+<style>
+  :root {
+    --bg: #14171c; --panel: #1d2229; --line: #2c333d; --text: #e9edf2; --muted: #8b95a3;
+    --accent: #f07322; --ok: #3ccf6e; --bad: #e5484d; --blue: #3b82f6;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { padding: 12px 14px 28px; max-width: 520px; margin: 0 auto; user-select: none; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  h1 { font-size: 17px; margin: 0; letter-spacing: .2px; }
+  h1 span { color: var(--accent); }
+  .conn { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--bad); }
+  .dot.on { background: var(--ok); }
+  .status { background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 8px 12px; font-size: 14px; margin-bottom: 10px; min-height: 38px; }
+  .status b { color: var(--accent); font-weight: 600; }
+  .cam { position: relative; background: #000; border-radius: 10px; overflow: hidden;
+    aspect-ratio: 16 / 9; margin-bottom: 10px; border: 1px solid var(--line); }
+  .cam img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cam .msg { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted);
+    font-size: 13px; text-align: center; padding: 10px; }
+  .cam .tabs { position: absolute; top: 6px; left: 6px; display: flex; gap: 4px; }
+  .tab { background: rgba(0,0,0,.55); color: #fff; border: 1px solid rgba(255,255,255,.25);
+    border-radius: 6px; padding: 3px 8px; font-size: 12px; }
+  .tab.sel { background: var(--accent); border-color: var(--accent); }
+  .drive { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 10px; }
+  .joywrap { display: grid; place-items: center; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 14px; }
+  #joy { width: min(68vw, 240px); height: min(68vw, 240px); border-radius: 50%; position: relative;
+    background: radial-gradient(circle, #262d37 0 55%, #20262f 56% 100%); border: 2px solid var(--line);
+    touch-action: none; }
+  #joy::before, #joy::after { content: ""; position: absolute; background: var(--line); }
+  #joy::before { left: 50%; top: 8%; bottom: 8%; width: 2px; transform: translateX(-1px); }
+  #joy::after { top: 50%; left: 8%; right: 8%; height: 2px; transform: translateY(-1px); }
+  #knob { position: absolute; width: 38%; height: 38%; left: 31%; top: 31%; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ff9a52, var(--accent)); box-shadow: 0 4px 14px rgba(0,0,0,.5);
+    z-index: 2; transition: transform .12s ease-out; }
+  #knob.drag { transition: none; }
+  .joyhint { color: var(--muted); font-size: 12px; margin-top: 8px; text-align: center; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .speed { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+  .speed label { font-size: 13px; color: var(--muted); }
+  .speed output { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 600; }
+  input[type=range] { width: 100%; accent-color: var(--accent); margin: 6px 0 2px; }
+  button { font: inherit; color: var(--text); background: #262d37; border: 1px solid var(--line);
+    border-radius: 10px; padding: 11px 10px; min-height: 44px; flex: 1; }
+  button:active { background: #313946; }
+  .stop { background: var(--bad); border-color: var(--bad); color: #fff; font-weight: 700; font-size: 17px;
+    letter-spacing: .5px; width: 100%; min-height: 56px; margin-bottom: 10px; }
+  .stop:active { background: #c43a3e; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px;
+    margin-bottom: 10px; }
+  section h2 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 0 8px; text-transform: uppercase;
+    letter-spacing: .6px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  select { font: inherit; color: var(--text); background: #262d37; border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px; min-height: 44px; flex: 1.4; }
+  .primary { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
+  .primary:active { background: #2f6fd8; }
+  .armval { font-size: 12px; color: var(--muted); margin-top: 6px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Path<span>Sense</span> Remote</h1>
+  <div class="conn"><div class="dot" id="dot"></div><span id="connText">connecting…</span></div>
+</header>
+
+<div class="status" id="status">Waiting for robot status…</div>
+
+<div class="cam">
+  <img id="camImg" alt="" style="visibility:hidden">
+  <div class="msg" id="camMsg">Camera view needs web_video_server<br>(started by phone_remote.launch.py)</div>
+  <div class="tabs">
+    <span class="tab sel" data-topic="/camera/front/image_raw">Front</span>
+    <span class="tab" data-topic="/camera/stair/image_raw">Stair</span>
+  </div>
+</div>
+
+<button class="stop" id="stopBtn">STOP</button>
+
+<div class="drive">
+  <div class="joywrap">
+    <div id="joy"><div id="knob"></div></div>
+    <div class="joyhint">Drag to drive · release to stop · automation resumes ½ s after release</div>
+  </div>
+  <div class="speed">
+    <div class="row"><label for="spd">Max speed</label><output id="spdOut">0.50 m/s</output></div>
+    <input type="range" id="spd" min="0.1" max="1.0" step="0.05" value="0.5">
+  </div>
+</div>
+
+<section>
+  <h2>Automation</h2>
+  <div class="row" style="margin-bottom:8px">
+    <select id="room"><option value="">Room…</option></select>
+    <button class="primary" id="goBtn">Go</button>
+  </div>
+  <div class="grid3">
+    <button id="tourBtn">Tour</button>
+    <button id="lobbyBtn">Lobby</button>
+    <button id="cancelBtn">Cancel</button>
+  </div>
+</section>
+
+<section>
+  <h2>Climbing arms</h2>
+  <div class="grid3">
+    <button data-arm="up">Up</button>
+    <button data-arm="down">Down</button>
+    <button data-arm="0.4">Drive</button>
+    <button data-arm="3.0">Fold</button>
+    <button data-arm="1.57">Vertical</button>
+    <button data-arm="-0.35">Press</button>
+  </div>
+  <div class="armval" id="armVal">Arm angle: –</div>
+</section>
+
+<script>
+(function () {
+  const host = location.hostname || 'localhost';
+  const ros = new ROSLIB.Ros({ url: 'ws://' + host + ':9090' });
+  const dot = document.getElementById('dot'), connText = document.getElementById('connText');
+  function setConn(on, txt) { dot.classList.toggle('on', on); connText.textContent = txt; }
+  ros.on('connection', () => setConn(true, 'connected'));
+  ros.on('error', () => setConn(false, 'no connection'));
+  ros.on('close', () => { setConn(false, 'reconnecting…'); setTimeout(() => ros.connect('ws://' + host + ':9090'), 2000); });
+
+  // ---------- topics ----------
+  const cmdVel = new ROSLIB.Topic({ ros, name: '/cmd_vel_phone', messageType: 'geometry_msgs/msg/Twist' });
+  const armL = new ROSLIB.Topic({ ros, name: '/arm_left/cmd_pos', messageType: 'std_msgs/msg/Float64' });
+  const armR = new ROSLIB.Topic({ ros, name: '/arm_right/cmd_pos', messageType: 'std_msgs/msg/Float64' });
+  const command = new ROSLIB.Topic({ ros, name: '/robot_command', messageType: 'std_msgs/msg/String' });
+  const statusTopic = new ROSLIB.Topic({ ros, name: '/robot_status', messageType: 'std_msgs/msg/String' });
+  const roomsTopic = new ROSLIB.Topic({ ros, name: '/robot_rooms', messageType: 'std_msgs/msg/String' });
+
+  const statusEl = document.getElementById('status');
+  statusTopic.subscribe(m => { statusEl.innerHTML = m.data.replace(/^([^:]+):/, '<b>$1:</b>'); });
+  const roomSel = document.getElementById('room');
+  let roomsLoaded = '';
+  roomsTopic.subscribe(m => {
+    if (m.data === roomsLoaded) return;
+    roomsLoaded = m.data;
+    const keep = roomSel.value;
+    roomSel.innerHTML = '<option value="">Room…</option>';
+    JSON.parse(m.data).forEach(r => { const o = document.createElement('option'); o.value = o.textContent = r; roomSel.appendChild(o); });
+    roomSel.value = keep;
+  });
+  const send = s => command.publish({ data: s });
+  document.getElementById('goBtn').onclick = () => { if (roomSel.value) send(roomSel.value); };
+  document.getElementById('tourBtn').onclick = () => send('tour');
+  document.getElementById('lobbyBtn').onclick = () => send('lobby');
+  document.getElementById('cancelBtn').onclick = () => send('stop');
+
+  // ---------- speed ----------
+  const spd = document.getElementById('spd'), spdOut = document.getElementById('spdOut');
+  spd.oninput = () => spdOut.textContent = (+spd.value).toFixed(2) + ' m/s';
+
+  // ---------- joystick ----------
+  const joy = document.getElementById('joy'), knob = document.getElementById('knob');
+  let jx = 0, jy = 0, active = false, timer = null;
+  const twist = (v, w) => ({ linear: { x: v, y: 0, z: 0 }, angular: { x: 0, y: 0, z: w } });
+  function sendJoy() {
+    const v = -jy * (+spd.value);
+    const w = -jx * Math.min(2.0, 1.2 + +spd.value);   // turn rate scales a little with speed
+    cmdVel.publish(twist(Math.abs(v) < 0.02 ? 0 : v, Math.abs(w) < 0.03 ? 0 : w));
+  }
+  function move(e) {
+    const r = joy.getBoundingClientRect();
+    const p = e.touches ? e.touches[0] : e;
+    let dx = (p.clientX - r.left - r.width / 2) / (r.width / 2);
+    let dy = (p.clientY - r.top - r.height / 2) / (r.height / 2);
+    const d = Math.hypot(dx, dy); if (d > 1) { dx /= d; dy /= d; }
+    jx = dx; jy = dy;
+    knob.style.transform = `translate(${dx * r.width * 0.31}px, ${dy * r.height * 0.31}px)`;
+  }
+  function start(e) { e.preventDefault(); active = true; knob.classList.add('drag'); move(e);
+    if (!timer) timer = setInterval(sendJoy, 100); sendJoy(); }
+  function end() { if (!active) return; active = false; jx = jy = 0; knob.classList.remove('drag');
+    knob.style.transform = ''; clearInterval(timer); timer = null;
+    for (let i = 0; i < 3; i++) setTimeout(() => cmdVel.publish(twist(0, 0)), i * 60); }
+  joy.addEventListener('touchstart', start, { passive: false });
+  joy.addEventListener('touchmove', e => { e.preventDefault(); move(e); }, { passive: false });
+  joy.addEventListener('touchend', end); joy.addEventListener('touchcancel', end);
+  joy.addEventListener('mousedown', e => { start(e); const mm = ev => move(ev);
+    const mu = () => { end(); removeEventListener('mousemove', mm); removeEventListener('mouseup', mu); };
+    addEventListener('mousemove', mm); addEventListener('mouseup', mu); });
+
+  // ---------- STOP: zero velocity for 1.5 s + cancel automation ----------
+  document.getElementById('stopBtn').onclick = () => {
+    send('stop');
+    let n = 0; const t = setInterval(() => { cmdVel.publish(twist(0, 0)); if (++n > 15) clearInterval(t); }, 100);
+  };
+
+  // ---------- arms ----------
+  let arm = 0.4; const armVal = document.getElementById('armVal');
+  function setArm(a) { arm = Math.max(-0.6, Math.min(3.0, a));
+    armL.publish({ data: arm }); armR.publish({ data: arm });
+    armVal.textContent = 'Arm angle: ' + arm.toFixed(2) + ' rad'; }
+  document.querySelectorAll('[data-arm]').forEach(b => b.onclick = () => {
+    const k = b.dataset.arm;
+    setArm(k === 'up' ? arm + 0.15 : k === 'down' ? arm - 0.15 : parseFloat(k));
+  });
+
+  // ---------- camera (web_video_server on port 8080) ----------
+  const img = document.getElementById('camImg'), camMsg = document.getElementById('camMsg');
+  function showCam(topic) {
+    img.src = `http://${host}:8080/stream?topic=${topic}&type=mjpeg&quality=60&width=640&height=360`;
+  }
+  // MJPEG streams don't always fire 'load', so check for decoded frames instead
+  setInterval(() => { const ok = img.naturalWidth > 0; camMsg.style.display = ok ? 'none' : 'grid'; img.style.visibility = ok ? 'visible' : 'hidden'; }, 1000);
+  img.onerror = () => { camMsg.style.display = 'grid'; };
+  document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('sel')); t.classList.add('sel');
+    showCam(t.dataset.topic);
+  });
+  showCam('/camera/front/image_raw');
+})();
+</script>
+</body>
+</html>

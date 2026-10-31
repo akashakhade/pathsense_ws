@@ -1,0 +1,19 @@
+# twist_mux: picks ONE driving command source by priority and sends it to /cmd_vel.
+# Highest priority wins while it is sending; after `timeout` seconds of silence the next one takes over.
+twist_mux:
+  ros__parameters:
+    use_sim_time: false        # timeouts in real (wall) time
+    use_stamped: false         # plain geometry_msgs/Twist everywhere
+    topics:
+      phone:
+        topic: cmd_vel_phone     # phone remote joystick
+        timeout: 0.5
+        priority: 100
+      keyboard:
+        topic: cmd_vel_key       # teleop_twist_keyboard (remapped, optional)
+        timeout: 0.5
+        priority: 90
+      navigation:
+        topic: cmd_vel_nav       # Nav2 automation
+        timeout: 0.5
+        priority: 10

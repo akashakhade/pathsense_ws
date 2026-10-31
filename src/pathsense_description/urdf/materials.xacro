@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!-- Colour palette taken from the concept render -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <material name="body_slate">   <color rgba="0.235 0.263 0.318 1.0"/></material> <!-- dark slate aluminium body -->
+  <material name="plate_silver"> <color rgba="0.760 0.780 0.800 1.0"/></material> <!-- top plate -->
+  <material name="wheel_silver"> <color rgba="0.800 0.815 0.835 1.0"/></material> <!-- wheel / pulley discs -->
+  <material name="hole_dark">    <color rgba="0.200 0.210 0.235 1.0"/></material> <!-- lightening holes, hubs, slots -->
+  <material name="track_black">  <color rgba="0.050 0.050 0.055 1.0"/></material> <!-- rubber tracks -->
+  <material name="arm_orange">   <color rgba="0.945 0.455 0.135 1.0"/></material> <!-- climbing arms -->
+  <material name="accent_yellow"><color rgba="0.960 0.770 0.120 1.0"/></material> <!-- road wheels, rings, LED -->
+  <material name="estop_red">    <color rgba="0.860 0.090 0.090 1.0"/></material> <!-- emergency stop -->
+  <material name="sensor_black"> <color rgba="0.090 0.090 0.100 1.0"/></material> <!-- LiDAR, cameras, antennas -->
+  <material name="lens_glass">   <color rgba="0.030 0.040 0.070 1.0"/></material>
+  <material name="tof_red">      <color rgba="0.480 0.080 0.080 1.0"/></material> <!-- downward ToF windows -->
+  <material name="contact_brass"><color rgba="0.820 0.640 0.220 1.0"/></material> <!-- charging contacts -->
+</robot>

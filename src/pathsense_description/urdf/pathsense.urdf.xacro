@@ -1,0 +1,470 @@
+<?xml version="1.0"?>
+<!--
+  PathSense stair-climbing indoor service robot
+  Tracked base (MEC235-style) with two retractable tracked climbing arms.
+  Base size 508 x 393 x 249 mm (L x W x H, without LiDAR / antennas).
+  All geometry is primitive shapes: no mesh files needed.
+
+  Frames:   base_footprint (ground) -> base_link (track axle height, body centre)
+  X forward, Y left, Z up (REP-103).
+-->
+<robot name="pathsense" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:arg name="use_gazebo" default="true"/>
+  <xacro:arg name="use_tof"    default="true"/>
+  <xacro:arg name="arm_start"  default="0.40"/>
+
+  <xacro:include filename="$(find pathsense_description)/urdf/materials.xacro"/>
+  <xacro:include filename="$(find pathsense_description)/urdf/macros.xacro"/>
+
+  <!-- ===================== dimensions (metres) ===================== -->
+  <!-- tracks -->
+  <xacro:property name="wheel_r"   value="0.080"/>  <!-- 160 mm toothed drive wheel -->
+  <xacro:property name="belt_t"    value="0.006"/>  <!-- belt thickness -->
+  <xacro:property name="pad_t"     value="0.003"/>  <!-- grip pad height -->
+  <xacro:property name="pad_len"   value="0.014"/>
+  <xacro:property name="track_r"   value="${wheel_r + belt_t + pad_t}"/>  <!-- 0.089 outer radius -->
+  <xacro:property name="wheel_x"   value="0.165"/>  <!-- half wheelbase -> 508 mm overall length -->
+  <xacro:property name="track_w"   value="0.045"/>
+  <!-- body -->
+  <xacro:property name="body_l"    value="0.444"/>
+  <xacro:property name="body_w"    value="0.196"/>
+  <xacro:property name="body_bot"  value="${0.040 - track_r}"/>   <!-- relative to base_link -->
+  <xacro:property name="body_top"  value="${0.245 - track_r}"/>
+  <xacro:property name="plate_t"   value="0.004"/>
+  <xacro:property name="top_z"     value="${body_top + plate_t}"/>  <!-- 249 mm above ground -->
+  <xacro:property name="gap"       value="0.006"/>
+  <xacro:property name="track_y"   value="${body_w/2 + gap + track_w/2}"/>
+  <!-- climbing arms -->
+  <xacro:property name="arm_w"     value="0.040"/>
+  <xacro:property name="arm_y"     value="${body_w/2 + gap + track_w + gap + arm_w/2}"/>
+  <xacro:property name="arm_len"   value="0.260"/>  <!-- pivot to end-pulley centre -->
+  <xacro:property name="end_r"     value="0.052"/>  <!-- 104 mm toothed end wheel -->
+  <xacro:property name="end_track_r" value="${end_r + belt_t + pad_t}"/>
+
+  <!-- ===================== base ===================== -->
+  <link name="base_footprint"/>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child  link="base_link"/>
+    <origin xyz="0 0 ${track_r}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="base_link">
+    <!-- main aluminium body -->
+    <visual>
+      <origin xyz="0 0 ${(body_top+body_bot)/2}" rpy="0 0 0"/>
+      <geometry><box size="${body_l} ${body_w} ${body_top-body_bot}"/></geometry>
+      <material name="body_slate"><color rgba="0.235 0.263 0.318 1.0"/></material>
+    </visual>
+    <!-- top plate (lighter, slight overhang) -->
+    <visual>
+      <origin xyz="0 0 ${body_top + plate_t/2}" rpy="0 0 0"/>
+      <geometry><box size="${body_l+0.008} ${body_w+0.006} ${plate_t}"/></geometry>
+      <material name="plate_silver"><color rgba="0.760 0.780 0.800 1.0"/></material>
+    </visual>
+    <!-- plate corner screws -->
+    <visual><origin xyz="${body_l/2-0.012} ${body_w/2-0.012} ${top_z}"/><geometry><cylinder radius="0.004" length="0.001"/></geometry><material name="hole_dark"><color rgba="0.200 0.210 0.235 1.0"/></material></visual>
+    <visual><origin xyz="${body_l/2-0.012} ${-body_w/2+0.012} ${top_z}"/><geometry><cylinder radius="0.004" length="0.001"/></geometry><material name="hole_dark"><color rgba="0.200 0.210 0.235 1.0"/></material></visual>
+    <visual><origin xyz="${-body_l/2+0.012} ${body_w/2-0.012} ${top_z}"/><geometry><cylinder radius="0.004" length="0.001"/></geometry><material name="hole_dark"><color rgba="0.200 0.210 0.235 1.0"/></material></visual>
+    <visual><origin xyz="${-body_l/2+0.012} ${-body_w/2+0.012} ${top_z}"/><geometry><cylinder radius="0.004" length="0.001"/></geometry><material name="hole_dark"><color rgba="0.200 0.210 0.235 1.0"/></material></visual>
+
+    <!-- side vent slots and rivets (both sides) -->
+    <xacro:macro name="side_details" params="s">
+      <visual><origin xyz="-0.120 ${s*(body_w/2+0.0005)} ${body_top-0.040}"/><geometry><box size="0.070 0.002 0.008"/></geometry><material name="hole_dark"><color rgba="0.200 0.210 0.235 1.0"/></material></visual>
+      <visual><origin xyz=" 0.000 ${s*(body_w/2+0.0005)} ${body_top-0.040}"/><geometry><box size="0.070 0.002 0.008"/></geometry><material name="hole_dark"><color rgba="0.200 0.210 0.235 1.0"/></material></visual>
+      <visual><origin xyz=" 0.120 ${s*(body_w/2+0.0005)} ${body_top-0.040}"/><geometry><box size="0.070 0.002 0.008"/></geometry><material name="hole_dark"><color rgba="0.200 0.210 0.235 1.0"/></material></visual>
+      <xacro:rivet_row n="9" i="0" x0="${-body_l/2+0.02}" x1="${body_l/2-0.02}" y="${s*(body_w/2+0.001)}" z="${body_top-0.008}"/>
+    </xacro:macro>
+    <xacro:side_details s="1"/>
+    <xacro:side_details s="-1"/>
+
+    <!-- charging contacts (rear face) -->
+    <visual><origin xyz="${-body_l/2-0.0015}  0.035 ${body_bot+0.025}"/><geometry><box size="0.003 0.022 0.012"/></geometry><material name="contact_brass"><color rgba="0.820 0.640 0.220 1.0"/></material></visual>
+    <visual><origin xyz="${-body_l/2-0.0015} -0.035 ${body_bot+0.025}"/><geometry><box size="0.003 0.022 0.012"/></geometry><material name="contact_brass"><color rgba="0.820 0.640 0.220 1.0"/></material></visual>
+
+    <collision>
+      <origin xyz="0 0 ${(body_top+body_bot)/2 + 0.01}" rpy="0 0 0"/>
+      <geometry><box size="${body_l} ${body_w} ${body_top-body_bot-0.02+plate_t}"/></geometry>
+    </collision>
+
+    <xacro:box_inertial m="3.6" x="${body_l}" y="${body_w}" z="${body_top-body_bot}">
+      <origin xyz="0 0 ${(body_top+body_bot)/2}" rpy="0 0 0"/>
+    </xacro:box_inertial>
+  </link>
+
+  <!-- ===================== static track belts (one per side) ===================== -->
+  <xacro:macro name="track_belt" params="side s">
+    <link name="track_${side}_link">
+      <!-- top run -->
+      <visual>
+        <origin xyz="0 0 ${wheel_r + belt_t/2}"/>
+        <geometry><box size="${2*wheel_x} ${track_w} ${belt_t}"/></geometry>
+        <material name="track_black"><color rgba="0.050 0.050 0.055 1.0"/></material>
+      </visual>
+      <!-- bottom run -->
+      <visual>
+        <origin xyz="0 0 ${-(wheel_r + belt_t/2)}"/>
+        <geometry><box size="${2*wheel_x} ${track_w} ${belt_t}"/></geometry>
+        <material name="track_black"><color rgba="0.050 0.050 0.055 1.0"/></material>
+      </visual>
+      <xacro:line_pads n="14" i="0" x0="${-wheel_x}" z0="${wheel_r+belt_t+pad_t/2}"    x1="${wheel_x}" z1="${wheel_r+belt_t+pad_t/2}"    y="0" w="${track_w}" pitch="0"/>
+      <xacro:line_pads n="14" i="0" x0="${-wheel_x}" z0="${-(wheel_r+belt_t+pad_t/2)}" x1="${wheel_x}" z1="${-(wheel_r+belt_t+pad_t/2)}" y="0" w="${track_w}" pitch="0"/>
+      <!-- 3 yellow bearing road wheels supporting the lower run -->
+      <xacro:macro name="road_wheel" params="x">
+        <visual>
+          <origin xyz="${x} 0 ${-(wheel_r - 0.014)}" rpy="${pi/2} 0 0"/>
+          <geometry><cylinder radius="0.014" length="${track_w-0.004}"/></geometry>
+          <material name="accent_yellow"><color rgba="0.960 0.770 0.120 1.0"/></material>
+        </visual>
+        <visual>
+          <origin xyz="${x} 0 ${-(wheel_r - 0.014)}" rpy="${pi/2} 0 0"/>
+          <geometry><cylinder radius="0.0075" length="${track_w+0.001}"/></geometry>
+          <material name="wheel_silver"><color rgba="0.800 0.815 0.835 1.0"/></material>
+        </visual>
+      </xacro:macro>
+      <xacro:road_wheel x="-0.067"/>
+      <xacro:road_wheel x="0.000"/>
+      <xacro:road_wheel x="0.067"/>
+      <!-- road-wheel bracket (inner side plate) -->
+      <visual>
+        <origin xyz="0 ${-s*(track_w/2 - 0.002)} ${-(wheel_r - 0.030)}"/>
+        <geometry><box size="0.170 0.003 0.040"/></geometry>
+        <material name="body_slate"><color rgba="0.235 0.263 0.318 1.0"/></material>
+      </visual>
+    </link>
+    <joint name="track_${side}_joint" type="fixed">
+      <parent link="base_link"/>
+      <child  link="track_${side}_link"/>
+      <origin xyz="0 ${s*track_y} 0"/>
+    </joint>
+  </xacro:macro>
+  <xacro:track_belt side="left"  s="1"/>
+  <xacro:track_belt side="right" s="-1"/>
+
+  <!-- ===================== drive wheels ===================== -->
+  <!-- visible 160 mm toothed wheel: rotating belt wrap + grip pads, silver faces with holes -->
+  <xacro:macro name="drive_wheel" params="name x s">
+    <link name="${name}_link">
+      <visual> <!-- belt wrapped around the wheel -->
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${wheel_r + belt_t}" length="${track_w}"/></geometry>
+        <material name="track_black"><color rgba="0.050 0.050 0.055 1.0"/></material>
+      </visual>
+      <xacro:ring_pads n="20" i="0" r="${wheel_r + belt_t + pad_t/2}" w="${track_w}"/>
+      <xacro:pulley_face r="0.072" yf="${s*(track_w/2 + 0.0015)}"  holes="6" rc="0.045" rh="0.012"/>
+      <xacro:pulley_face r="0.072" yf="${-s*(track_w/2 + 0.0015)}" holes="6" rc="0.045" rh="0.012"/>
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${track_r}" length="${track_w}"/></geometry>
+      </collision>
+      <xacro:wheel_inertial m="0.25" r="${wheel_r}" h="${track_w}"/>
+    </link>
+    <joint name="${name}_joint" type="continuous">
+      <parent link="base_link"/>
+      <child  link="${name}_link"/>
+      <origin xyz="${x} ${s*track_y} 0" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <dynamics damping="0.05" friction="0.0"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- hidden support wheels inside the track loop: give the flat belt run real ground contact in Gazebo -->
+  <xacro:macro name="support_wheel" params="name x s">
+    <link name="${name}_link">
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${track_r}" length="${track_w}"/></geometry>
+      </collision>
+      <xacro:wheel_inertial m="0.10" r="${wheel_r}" h="${track_w}"/>
+    </link>
+    <joint name="${name}_joint" type="continuous">
+      <parent link="base_link"/>
+      <child  link="${name}_link"/>
+      <origin xyz="${x} ${s*track_y} 0" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <dynamics damping="0.05" friction="0.0"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:drive_wheel   name="wheel_front_left"  x="${wheel_x}"   s="1"/>
+  <xacro:drive_wheel   name="wheel_rear_left"   x="${-wheel_x}"  s="1"/>
+  <xacro:drive_wheel   name="wheel_front_right" x="${wheel_x}"   s="-1"/>
+  <xacro:drive_wheel   name="wheel_rear_right"  x="${-wheel_x}"  s="-1"/>
+  <xacro:support_wheel name="support_front_left"  x="${wheel_x/3}"  s="1"/>
+  <xacro:support_wheel name="support_rear_left"   x="${-wheel_x/3}" s="1"/>
+  <xacro:support_wheel name="support_front_right" x="${wheel_x/3}"  s="-1"/>
+  <xacro:support_wheel name="support_rear_right"  x="${-wheel_x/3}" s="-1"/>
+
+  <!-- ===================== retractable tracked climbing arms ===================== -->
+  <!--
+    Arm frame: origin on the front axle, X points along the arm.
+    Joint angle q (rad):  0 = arm straight forward,  +0.40 = raised (concept pose),
+                          +1.57 = vertical,  +3.0 = folded back over the track,
+                          negative = pressing the nose down (lifts the front of the robot).
+  -->
+  <!-- external tangent of the arm belt between pivot pulley (r1) and end pulley (r2) -->
+  <xacro:property name="r1" value="${wheel_r + belt_t/2}"/>
+  <xacro:property name="r2" value="${end_r + belt_t/2}"/>
+  <xacro:property name="tn_x" value="${(r1 - r2)/arm_len}"/>
+  <xacro:property name="tn_z" value="${sqrt(1 - tn_x*tn_x)}"/>
+  <xacro:property name="seg_len" value="${sqrt(arm_len*arm_len - (r1-r2)*(r1-r2))}"/>
+  <xacro:property name="seg_pitch" value="${atan2(r1 - r2, seg_len)}"/>
+
+  <xacro:macro name="arm_end_holes" params="n i yf">
+    <xacro:if value="${i &lt; n}">
+      <visual>
+        <origin xyz="${arm_len + 0.029*cos(2*pi*i/n + pi/4)} ${yf} ${0.029*sin(2*pi*i/n + pi/4)}" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="0.008" length="0.002"/></geometry>
+        <material name="hole_dark"><color rgba="0.200 0.210 0.235 1.0"/></material>
+      </visual>
+      <xacro:arm_end_holes n="${n}" i="${i+1}" yf="${yf}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <xacro:macro name="climb_arm" params="side s">
+    <link name="arm_${side}_link">
+      <!-- belt wrap at pivot pulley -->
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${wheel_r + belt_t}" length="${arm_w}"/></geometry>
+        <material name="track_black"><color rgba="0.050 0.050 0.055 1.0"/></material>
+      </visual>
+      <xacro:ring_pads n="20" i="0" r="${wheel_r + belt_t + pad_t/2}" w="${arm_w}"/>
+      <xacro:pulley_face r="0.072" yf="${-s*(arm_w/2 + 0.0015)}" holes="6" rc="0.045" rh="0.012"/>
+      <xacro:pulley_face r="0.072" yf="${s*(arm_w/2 + 0.0015)}"  holes="6" rc="0.045" rh="0.012"/>
+      <!-- belt wrap at end pulley -->
+      <visual>
+        <origin xyz="${arm_len} 0 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${end_r + belt_t}" length="${arm_w}"/></geometry>
+        <material name="track_black"><color rgba="0.050 0.050 0.055 1.0"/></material>
+      </visual>
+      <!-- end pulley faces (silver, 4 holes) -->
+      <visual>
+        <origin xyz="${arm_len} ${s*(arm_w/2+0.0015)} 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="0.046" length="0.003"/></geometry>
+        <material name="wheel_silver"><color rgba="0.800 0.815 0.835 1.0"/></material>
+      </visual>
+      <visual>
+        <origin xyz="${arm_len} ${-s*(arm_w/2+0.0015)} 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="0.046" length="0.003"/></geometry>
+        <material name="wheel_silver"><color rgba="0.800 0.815 0.835 1.0"/></material>
+      </visual>
+      <!-- end pulley holes and hubs -->
+      <visual>
+        <origin xyz="${arm_len} 0 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="0.010" length="${arm_w + 0.009}"/></geometry>
+        <material name="hole_dark"><color rgba="0.200 0.210 0.235 1.0"/></material>
+      </visual>
+      <xacro:arm_end_holes n="4" i="0" yf="${s*(arm_w/2+0.0032)}"/>
+      <xacro:arm_end_holes n="4" i="0" yf="${-s*(arm_w/2+0.0032)}"/>
+      <!-- upper and lower straight belt runs -->
+      <visual>
+        <origin xyz="${(r1*tn_x + arm_len + r2*tn_x)/2} 0 ${(r1+r2)*tn_z/2}" rpy="0 ${seg_pitch} 0"/>
+        <geometry><box size="${seg_len} ${arm_w} ${belt_t}"/></geometry>
+        <material name="track_black"><color rgba="0.050 0.050 0.055 1.0"/></material>
+      </visual>
+      <visual>
+        <origin xyz="${(r1*tn_x + arm_len + r2*tn_x)/2} 0 ${-(r1+r2)*tn_z/2}" rpy="0 ${-seg_pitch} 0"/>
+        <geometry><box size="${seg_len} ${arm_w} ${belt_t}"/></geometry>
+        <material name="track_black"><color rgba="0.050 0.050 0.055 1.0"/></material>
+      </visual>
+      <xacro:line_pads n="10" i="0"
+          x0="${(r1+0.0045)*tn_x}" z0="${(r1+0.0045)*tn_z}" x1="${arm_len+(r2+0.0045)*tn_x}" z1="${(r2+0.0045)*tn_z}"
+          y="0" w="${arm_w}" pitch="${seg_pitch}"/>
+      <xacro:line_pads n="10" i="0"
+          x0="${(r1+0.0045)*tn_x}" z0="${-(r1+0.0045)*tn_z}" x1="${arm_len+(r2+0.0045)*tn_x}" z1="${-(r2+0.0045)*tn_z}"
+          y="0" w="${arm_w}" pitch="${-seg_pitch}"/>
+
+      <!-- orange arm beam on the outer face, rounded ends -->
+      <visual>
+        <origin xyz="${arm_len/2} ${s*0.022} 0" rpy="0 ${pi/2} 0"/>
+        <geometry><cylinder radius="0.021" length="${arm_len}"/></geometry>
+        <material name="arm_orange"><color rgba="0.945 0.455 0.135 1.0"/></material>
+      </visual>
+      <visual><origin xyz="${arm_len} ${s*0.022} 0"/><geometry><sphere radius="0.021"/></geometry><material name="arm_orange"><color rgba="0.945 0.455 0.135 1.0"/></material></visual>
+      <visual><origin xyz="0 ${s*0.022} 0"/><geometry><sphere radius="0.021"/></geometry><material name="arm_orange"><color rgba="0.945 0.455 0.135 1.0"/></material></visual>
+      <!-- lightening holes in the beam -->
+      <visual><origin xyz="${arm_len*0.30} ${s*0.0425} 0" rpy="${pi/2} 0 0"/><geometry><cylinder radius="0.0055" length="0.002"/></geometry><material name="hole_dark"><color rgba="0.200 0.210 0.235 1.0"/></material></visual>
+      <visual><origin xyz="${arm_len*0.45} ${s*0.0425} 0" rpy="${pi/2} 0 0"/><geometry><cylinder radius="0.0055" length="0.002"/></geometry><material name="hole_dark"><color rgba="0.200 0.210 0.235 1.0"/></material></visual>
+      <visual><origin xyz="${arm_len*0.60} ${s*0.0425} 0" rpy="${pi/2} 0 0"/><geometry><cylinder radius="0.0055" length="0.002"/></geometry><material name="hole_dark"><color rgba="0.200 0.210 0.235 1.0"/></material></visual>
+      <visual><origin xyz="${arm_len*0.80} ${s*0.0425} 0" rpy="${pi/2} 0 0"/><geometry><cylinder radius="0.0075" length="0.002"/></geometry><material name="hole_dark"><color rgba="0.200 0.210 0.235 1.0"/></material></visual>
+      <!-- arm motor housing at the pivot: yellow ring + black cap -->
+      <visual>
+        <origin xyz="0 ${s*0.046} 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="0.023" length="0.006"/></geometry>
+        <material name="accent_yellow"><color rgba="0.960 0.770 0.120 1.0"/></material>
+      </visual>
+      <visual>
+        <origin xyz="0 ${s*0.060} 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="0.021" length="0.022"/></geometry>
+        <material name="sensor_black"><color rgba="0.090 0.090 0.100 1.0"/></material>
+      </visual>
+
+      <!-- collision: end pulley + belt body (pivot area left out so it never drags on the floor) -->
+      <collision>
+        <origin xyz="${arm_len} 0 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${end_track_r}" length="${arm_w}"/></geometry>
+      </collision>
+      <collision>
+        <origin xyz="${(0.09 + arm_len)/2} 0 0" rpy="0 0 0"/>
+        <geometry><box size="${arm_len - 0.09} ${arm_w} 0.11"/></geometry>
+      </collision>
+
+      <xacro:box_inertial m="0.45" x="${arm_len}" y="${arm_w}" z="0.10">
+        <origin xyz="${arm_len/2} 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+    </link>
+
+    <joint name="arm_${side}_joint" type="revolute">
+      <parent link="base_link"/>
+      <child  link="arm_${side}_link"/>
+      <origin xyz="${wheel_x} ${s*arm_y} 0" rpy="0 0 0"/>
+      <axis xyz="0 -1 0"/>   <!-- positive angle raises the arm -->
+      <limit lower="-0.60" upper="3.00" effort="25.0" velocity="1.0"/>
+      <dynamics damping="2.0" friction="0.3"/>
+    </joint>
+  </xacro:macro>
+  <xacro:climb_arm side="left"  s="1"/>
+  <xacro:climb_arm side="right" s="-1"/>
+
+  <!-- ===================== top-deck items ===================== -->
+  <!-- 2D LiDAR (RPLIDAR A1 type) on a short mast -->
+  <link name="lidar_mount_link">
+    <visual><origin xyz="0 0 0.0125"/><geometry><cylinder radius="0.012" length="0.025"/></geometry><material name="sensor_black"><color rgba="0.090 0.090 0.100 1.0"/></material></visual>
+    <visual><origin xyz="0 0 0.034"/><geometry><cylinder radius="0.036" length="0.018"/></geometry><material name="sensor_black"><color rgba="0.090 0.090 0.100 1.0"/></material></visual>
+    <visual><origin xyz="0 0 0.046"/><geometry><cylinder radius="0.026" length="0.006"/></geometry><material name="hole_dark"><color rgba="0.200 0.210 0.235 1.0"/></material></visual>
+    <visual><origin xyz="0 0 0.059"/><geometry><cylinder radius="0.034" length="0.020"/></geometry><material name="sensor_black"><color rgba="0.090 0.090 0.100 1.0"/></material></visual>
+    <collision><origin xyz="0 0 0.035"/><geometry><cylinder radius="0.036" length="0.07"/></geometry></collision>
+  </link>
+  <joint name="lidar_mount_joint" type="fixed">
+    <parent link="base_link"/><child link="lidar_mount_link"/>
+    <origin xyz="0.068 0 ${top_z}"/>
+  </joint>
+  <link name="lidar_link"/>
+  <joint name="lidar_joint" type="fixed">
+    <parent link="lidar_mount_link"/><child link="lidar_link"/>
+    <origin xyz="0 0 0.059"/>
+  </joint>
+
+  <!-- emergency stop: yellow collar + red mushroom -->
+  <link name="estop_link">
+    <visual><origin xyz="0 0 0.004"/><geometry><cylinder radius="0.022" length="0.008"/></geometry><material name="accent_yellow"><color rgba="0.960 0.770 0.120 1.0"/></material></visual>
+    <visual><origin xyz="0 0 0.013"/><geometry><cylinder radius="0.012" length="0.010"/></geometry><material name="estop_red"><color rgba="0.860 0.090 0.090 1.0"/></material></visual>
+    <visual><origin xyz="0 0 0.022"/><geometry><cylinder radius="0.020" length="0.010"/></geometry><material name="estop_red"><color rgba="0.860 0.090 0.090 1.0"/></material></visual>
+    <visual><origin xyz="0 0 0.025"/><geometry><sphere radius="0.019"/></geometry><material name="estop_red"><color rgba="0.860 0.090 0.090 1.0"/></material></visual>
+  </link>
+  <joint name="estop_joint" type="fixed">
+    <parent link="base_link"/><child link="estop_link"/>
+    <origin xyz="-0.150 0.055 ${top_z}"/>
+  </joint>
+
+  <!-- antennas: tall Wi-Fi (rear right) and short RC (rear left, leaning back) -->
+  <link name="wifi_antenna_link">
+    <visual><origin xyz="0 0 0.007"/><geometry><cylinder radius="0.008" length="0.014"/></geometry><material name="sensor_black"><color rgba="0.090 0.090 0.100 1.0"/></material></visual>
+    <visual><origin xyz="0 0 0.079"/><geometry><cylinder radius="0.0045" length="0.130"/></geometry><material name="sensor_black"><color rgba="0.090 0.090 0.100 1.0"/></material></visual>
+  </link>
+  <joint name="wifi_antenna_joint" type="fixed">
+    <parent link="base_link"/><child link="wifi_antenna_link"/>
+    <origin xyz="-0.200 -0.062 ${top_z}"/>
+  </joint>
+  <link name="rc_antenna_link">
+    <visual><origin xyz="0 0 0.006"/><geometry><cylinder radius="0.007" length="0.012"/></geometry><material name="sensor_black"><color rgba="0.090 0.090 0.100 1.0"/></material></visual>
+    <visual><origin xyz="0 0 0.055" rpy="0 -0.40 0"/><geometry><cylinder radius="0.0035" length="0.095"/></geometry><material name="sensor_black"><color rgba="0.090 0.090 0.100 1.0"/></material></visual>
+  </link>
+  <joint name="rc_antenna_joint" type="fixed">
+    <parent link="base_link"/><child link="rc_antenna_link"/>
+    <origin xyz="-0.185 0.072 ${top_z}"/>
+  </joint>
+
+  <!-- ===================== cameras ===================== -->
+  <!-- forward camera: 1080p wide angle, upper front face -->
+  <link name="camera_front_housing_link">
+    <visual><origin xyz="0.015 0 0"/><geometry><box size="0.030 0.075 0.045"/></geometry><material name="sensor_black"><color rgba="0.090 0.090 0.100 1.0"/></material></visual>
+    <visual><origin xyz="0.0315 0 0" rpy="0 ${pi/2} 0"/><geometry><cylinder radius="0.017" length="0.004"/></geometry><material name="wheel_silver"><color rgba="0.800 0.815 0.835 1.0"/></material></visual>
+    <visual><origin xyz="0.034 0 0" rpy="0 ${pi/2} 0"/><geometry><cylinder radius="0.0135" length="0.004"/></geometry><material name="lens_glass"><color rgba="0.030 0.040 0.070 1.0"/></material></visual>
+    <visual><origin xyz="0.031 0.028 0.014"/><geometry><sphere radius="0.003"/></geometry><material name="accent_yellow"><color rgba="0.960 0.770 0.120 1.0"/></material></visual>
+  </link>
+  <joint name="camera_front_housing_joint" type="fixed">
+    <parent link="base_link"/><child link="camera_front_housing_link"/>
+    <origin xyz="${body_l/2} 0 ${0.212 - track_r}"/>
+  </joint>
+  <link name="camera_front_link"/>
+  <joint name="camera_front_joint" type="fixed">
+    <parent link="camera_front_housing_link"/><child link="camera_front_link"/>
+    <origin xyz="0.036 0 0"/>
+  </joint>
+  <link name="camera_front_optical_frame"/>
+  <joint name="camera_front_optical_joint" type="fixed">
+    <parent link="camera_front_link"/><child link="camera_front_optical_frame"/>
+    <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+  </joint>
+
+  <!-- stair camera: lower front face, tilted down at the stair edge -->
+  <link name="camera_stair_housing_link">
+    <visual><origin xyz="0.0125 0 0"/><geometry><box size="0.025 0.055 0.036"/></geometry><material name="sensor_black"><color rgba="0.090 0.090 0.100 1.0"/></material></visual>
+    <visual><origin xyz="0.0265 0 0" rpy="0 ${pi/2} 0"/><geometry><cylinder radius="0.011" length="0.004"/></geometry><material name="lens_glass"><color rgba="0.030 0.040 0.070 1.0"/></material></visual>
+  </link>
+  <joint name="camera_stair_housing_joint" type="fixed">
+    <parent link="base_link"/><child link="camera_stair_housing_link"/>
+    <origin xyz="${body_l/2} 0 ${0.084 - track_r}" rpy="0 0.35 0"/>
+  </joint>
+  <link name="camera_stair_link"/>
+  <joint name="camera_stair_joint" type="fixed">
+    <parent link="camera_stair_housing_link"/><child link="camera_stair_link"/>
+    <origin xyz="0.029 0 0" rpy="0 0.25 0"/>   <!-- total ~0.6 rad down tilt -->
+  </joint>
+  <link name="camera_stair_optical_frame"/>
+  <joint name="camera_stair_optical_joint" type="fixed">
+    <parent link="camera_stair_link"/><child link="camera_stair_optical_frame"/>
+    <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+  </joint>
+
+  <!-- ===================== internal sensors ===================== -->
+  <link name="imu_link"/>       <!-- BNO055 -->
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/><child link="imu_link"/>
+    <origin xyz="0 0 0.02"/>
+  </joint>
+  <link name="pressure_link"/>  <!-- BMP390 barometer (floor change) -->
+  <joint name="pressure_joint" type="fixed">
+    <parent link="base_link"/><child link="pressure_link"/>
+    <origin xyz="-0.05 0 0.02"/>
+  </joint>
+
+  <!-- ===================== 6 x VL53L1X time-of-flight edge sensors ===================== -->
+  <!-- 4 pointing down at the body corners (stair edge), 2 sideways (centring on stairs) -->
+  <xacro:macro name="tof_down" params="name x y">
+    <link name="tof_${name}_link">
+      <visual><origin xyz="0 0 0"/><geometry><box size="0.008 0.020 0.012"/></geometry><material name="tof_red"><color rgba="0.480 0.080 0.080 1.0"/></material></visual>
+    </link>
+    <joint name="tof_${name}_joint" type="fixed">
+      <parent link="base_link"/><child link="tof_${name}_link"/>
+      <origin xyz="${x} ${y} ${body_bot + 0.014}" rpy="0 ${pi/2} 0"/>
+    </joint>
+  </xacro:macro>
+  <xacro:tof_down name="front_left"  x="${ body_l/2 + 0.004}" y=" 0.070"/>
+  <xacro:tof_down name="front_right" x="${ body_l/2 + 0.004}" y="-0.070"/>
+  <xacro:tof_down name="rear_left"   x="${-body_l/2 - 0.004}" y=" 0.070"/>
+  <xacro:tof_down name="rear_right"  x="${-body_l/2 - 0.004}" y="-0.070"/>
+
+  <xacro:macro name="tof_side" params="name s">
+    <link name="tof_${name}_link">
+      <visual><origin xyz="0 0 0"/><geometry><box size="0.008 0.020 0.012"/></geometry><material name="sensor_black"><color rgba="0.090 0.090 0.100 1.0"/></material></visual>
+    </link>
+    <joint name="tof_${name}_joint" type="fixed">
+      <parent link="base_link"/><child link="tof_${name}_link"/>
+      <origin xyz="0.150 ${s*(body_w/2 + 0.004)} ${body_top - 0.022}" rpy="0 0 ${s*pi/2}"/>
+    </joint>
+  </xacro:macro>
+  <xacro:tof_side name="side_left"  s="1"/>
+  <xacro:tof_side name="side_right" s="-1"/>
+
+  <!-- ===================== Gazebo Harmonic plugins and sensors ===================== -->
+  <xacro:if value="$(arg use_gazebo)">
+    <xacro:include filename="$(find pathsense_description)/urdf/gazebo.xacro"/>
+    <xacro:pathsense_gazebo use_tof="$(arg use_tof)" arm_start="$(arg arm_start)"/>
+  </xacro:if>
+
+</robot>
